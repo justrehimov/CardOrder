@@ -1,16 +1,21 @@
 package az.desofme.bank.service.impl;
 
 import az.desofme.bank.dto.request.CustomerRequest;
+import az.desofme.bank.dto.request.LoginRequest;
+import az.desofme.bank.dto.response.LoginResponse;
 import az.desofme.bank.dto.response.CreateCustomerResponse;
 import az.desofme.bank.dto.response.ResponseModel;
 import az.desofme.bank.entity.ConfirmToken;
 import az.desofme.bank.entity.Customer;
+import az.desofme.bank.entity.Role;
 import az.desofme.bank.exceptions.BankException;
+import az.desofme.bank.jwt.JwtService;
 import az.desofme.bank.repository.ConfirmTokenRepository;
 import az.desofme.bank.repository.CustomerRepository;
 import az.desofme.bank.service.AuthService;
 import az.desofme.bank.service.ConfirmTokenService;
 import az.desofme.bank.service.CustomerService;
+import az.desofme.bank.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -19,13 +24,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
+
+import static az.desofme.bank.constants.Roles.*;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +50,9 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JavaMailSender javaMailSender;
+    private final RoleService roleService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @Value("${app.host}")
     private String appHost;
@@ -50,6 +64,8 @@ public class AuthServiceImpl implements AuthService {
             validateCustomerRequest(customerRequest);
             var customer = modelMapper.map(customerRequest, Customer.class);
             customer.setPassword(passwordEncoder.encode(customer.getPassword()));
+            Role role = roleService.getByName(CUSTOMER);
+            customer.setRoles(List.of(role));
             var savedCustomer = customerRepository.save(customer);
             sendConfirmMail(savedCustomer);
             var createCustomerResponse = new CreateCustomerResponse(savedCustomer.getId());
@@ -101,8 +117,46 @@ public class AuthServiceImpl implements AuthService {
             log.error(ex.getMessage(), ex);
             var responseModel = ResponseModel.<CreateCustomerResponse>builder()
                     .data(null)
+                    .error(true)
                     .code(ex.getCode())
                     .message(ex.getMessage())
+                    .build();
+            return responseModel;
+        }
+    }
+
+    @Override
+    public ResponseModel<LoginResponse> login(LoginRequest loginRequest) {
+        try {
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(loginRequest.getPin(), loginRequest.getPassword());
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            var accessToken = jwtService.generateToken(userDetails);
+            var loginResponse = LoginResponse.withAccessToken(accessToken);
+
+            return ResponseModel.<LoginResponse>builder()
+                    .data(loginResponse)
+                    .message(HttpStatus.OK.name())
+                    .code(HttpStatus.OK.toString())
+                    .build();
+
+        }catch (BankException ex){
+            log.error(ex.getMessage(), ex);
+            var responseModel = ResponseModel.<LoginResponse>builder()
+                    .data(new LoginResponse())
+                    .error(true)
+                    .code(ex.getCode())
+                    .message(ex.getMessage())
+                    .build();
+            return responseModel;
+        }catch (Exception ex){
+            log.error(ex.getMessage(), ex);
+            var responseModel = ResponseModel.<LoginResponse>builder()
+                    .data(new LoginResponse())
+                    .error(true)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.toString())
+                    .message(HttpStatus.INTERNAL_SERVER_ERROR.name())
                     .build();
             return responseModel;
         }
@@ -138,7 +192,7 @@ public class AuthServiceImpl implements AuthService {
         var savedConfirmToken = confirmTokenRepository.save(confirmToken);
         var message = javaMailSender.createMimeMessage();
         var helper = new MimeMessageHelper(message);
-        helper.setFrom(new InternetAddress("vusall.rehimovv@gmail.com", "DesofmeBank", "utf-8"));
+        helper.setFrom(new InternetAddress("vusall.rehimovv@gmail.com", "Desofme Bank", "utf-8"));
         helper.setTo(confirmToken.getEmail());
         helper.setSubject("Confirmation mail");
         helper.setText(getConfirmMessage(customer, savedConfirmToken), true);
