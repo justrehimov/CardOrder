@@ -1,4 +1,4 @@
-package az.desofme.bank.schedul;
+package az.desofme.bank.schedule;
 
 import az.desofme.bank.repository.ConfirmTokenRepository;
 import lombok.RequiredArgsConstructor;

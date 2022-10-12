@@ -31,8 +31,10 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
 
-    private static List<String> whiteList = List.of(
-            "auth"
+    private static List<String> WHITE_LIST = List.of(
+            "auth",
+            "swagger",
+            "docs"
     );
 
     private final JwtService jwtService;
@@ -43,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             var isInWhiteList = isInWhiteList(request.getServletPath());
-            if(request.getServletPath().contains("auth") || request.getServletPath().contains("swagger") || request.getServletPath().contains("docs")){
+            if(isInWhiteList){
                 filterChain.doFilter(request, response);
             } else {
                 String header = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -98,12 +100,12 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private boolean isInWhiteList(String path){
-
-        for(String url: whiteList){
-            if(url.contains(path)){
-                return true;
+        boolean ok = false;
+        for(String whitePath: WHITE_LIST){
+            if(path.contains(whitePath)){
+                ok = true;
             }
         }
-        return false;
+        return ok;
     }
 }
