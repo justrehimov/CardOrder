@@ -45,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             var isInWhiteList = isInWhiteList(request.getServletPath());
-            if(isInWhiteList){
+            if (isInWhiteList) {
                 filterChain.doFilter(request, response);
             } else {
                 String header = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -65,7 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);
                 }
             }
-        }catch (BankException ex){
+        } catch (BankException ex) {
             log.error(ex.getMessage(), ex);
             var exceptionResponse = ResponseModel.builder()
                     .error(true)
@@ -75,7 +75,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     .build();
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             objectMapper.writeValue(response.getOutputStream(), exceptionResponse);
-        }catch (JwtException ex){
+        } catch (JwtException ex) {
             log.error(ex.getMessage(), ex);
             var exceptionResponse = ResponseModel.builder()
                     .error(true)
@@ -85,8 +85,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     .build();
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             objectMapper.writeValue(response.getOutputStream(), exceptionResponse);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             var exceptionResponse = ResponseModel.builder()
                     .error(true)
@@ -99,10 +98,10 @@ public class JwtFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isInWhiteList(String path){
+    private boolean isInWhiteList(String path) {
         boolean ok = false;
-        for(String whitePath: WHITE_LIST){
-            if(path.contains(whitePath)){
+        for (String whitePath : WHITE_LIST) {
+            if (path.contains(whitePath)) {
                 ok = true;
             }
         }

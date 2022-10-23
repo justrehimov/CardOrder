@@ -1,23 +1,13 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/desofme_bank
-    username: postgres
-    password: postgres
+    url: jdbc:mysql://plsk21.servername.co:3306/desofme_bank
+    username: desofme_user
+    password: desofmebank
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-
-jwt:
-  security:
-    white:
-      list:
-        - /api/v1/auth/
-        - /v2/api-docs
-        - /configuration/ui
-        - /swagger-resources/
-        - /configuration/security
-        - /swagger-ui.html
-        - /swagger-ui/index.html
-        - /swagger-ui
-        - /webjars/
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect

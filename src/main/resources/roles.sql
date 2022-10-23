@@ -1,2 +1,4 @@
-insert into role(name) values('CUSTOMER');
-insert into role(name) values('ADMIN');
+insert into role(name)
+values ('CUSTOMER');
+insert into role(name)
+values ('ADMIN');

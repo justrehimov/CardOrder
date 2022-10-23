@@ -4,9 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Date;
 
@@ -23,8 +25,8 @@ public class JwtService {
     @Value("${jwt.issuer}")
     private String ISSUER;
 
-    public String generateToken(UserDetails user){
-        String token =  Jwts.builder()
+    public String generateToken(UserDetails user) {
+        String token = Jwts.builder()
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setIssuer(ISSUER)
@@ -34,12 +36,17 @@ public class JwtService {
         return token;
     }
 
-    public String getPinFromToken(String token){
+    public String getPinFromToken(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)
                 .parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
 
+    public String getPinFromRequest(HttpServletRequest request) {
+        var header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        var token = header.substring(7);
+        return getPinFromToken(token);
+    }
 
 }

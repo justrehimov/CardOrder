@@ -2,80 +2,132 @@ package az.desofme.bank.service;
 
 import az.desofme.bank.dto.request.CustomerRequest;
 import az.desofme.bank.entity.Customer;
+import az.desofme.bank.entity.Role;
 import az.desofme.bank.exceptions.BankException;
 import az.desofme.bank.repository.CustomerRepository;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
 import static az.desofme.bank.constants.TestConstants.EMAIL;
+import static az.desofme.bank.constants.TestConstants.NAME;
+import static az.desofme.bank.constants.TestConstants.PASSWORD;
+import static az.desofme.bank.constants.TestConstants.PIN;
+import static az.desofme.bank.constants.TestConstants.ROLE_CUSTOMER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static az.desofme.bank.constants.TestConstants.PIN;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceTest {
+class AuthServiceTest {
 
-    @Mock
-    private ModelMapper modelMapper;
     @Mock
     private CustomerRepository customerRepository;
 
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+    @Mock
+    private ModelMapper modelMapper;
 
-
-    private static CustomerRequest customerRequest;
-
-    @BeforeAll
-    static void setUp() {
-        customerRequest = new CustomerRequest();
-        customerRequest.setPin(PIN);
-    }
+    @Mock
+    private RoleService roleService;
 
     @Test
-    void register_Success(){
+    void whenCustomerExistsByEmail_shouldThrowBankException(){
         //given
-        var customer = new Customer();
-        customer.setPin(PIN);
-        customer.setEmail(EMAIL);
+        var request = new CustomerRequest();
+        request.setEmail(EMAIL);
+
+        var expected = new Customer();
+        expected.setEmail(EMAIL);
 
         //when
-        when(modelMapper.map(customerRequest, Customer.class)).thenReturn(customer);
-        when(customerRepository.save(customer)).thenReturn(customer);
+        when(customerRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(expected));
 
         //then
-        var mappedCustomer = modelMapper.map(customerRequest, Customer.class);
-        var savedCustomer = customerRepository.save(customer);
+        var actual = customerRepository.findByEmail(EMAIL).get();
 
-        assertEquals(customer, mappedCustomer);
-        assertEquals(customer, savedCustomer);
-        verify(modelMapper).map(customerRequest, Customer.class);
-        verify(customerRepository).save(customer);
+        Executable executable = () -> {
+            if(expected.getEmail().equals(actual.getEmail())){
+                throw new BankException();
+            }
+        };
+
+        assertThrows(BankException.class, executable);
+
+        verify(customerRepository).findByEmail(EMAIL);
+
     }
 
     @Test
-    void whenCustomerPinDuplicate_shouldReturnException() {
+    void whenCustomerExistsByPin_shouldThrowBankException() {
+        //given
+        var request = new CustomerRequest();
+        request.setPin(PIN);
 
-        var customer = new Customer();
-        customer.setPin(PIN);
+        var expected = new Customer();
+        expected.setPin(PIN);
 
-        when(customerRepository.findByPin(PIN)).thenReturn(Optional.of(customer));
 
+        //when
+        when(customerRepository.findByPin(PIN)).thenReturn(Optional.of(expected));
+
+        //then
         var actual = customerRepository.findByPin(PIN);
 
-        Executable executable = () -> {
-            if(actual.isPresent())
+        assertThrows(BankException.class, ()->{
+            if(Optional.of(expected).equals(actual)){
                 throw new BankException();
-        };
-        assertThrows(BankException.class, executable);
+            }
+        });
+
+        verify(customerRepository).findByPin(PIN);
+
+    }
+
+    @Test
+    void register_Success() {
+        //given
+        var request = new CustomerRequest();
+        request.setName(NAME);
+        request.setPassword(PASSWORD);
+
+        var expected = new Customer();
+        var savedCustomer = new Customer();
+
+        String expectedPassword = "";
+
+        var expectedRole = new Role();
+
+        //when
+        when(modelMapper.map(request, Customer.class)).thenReturn(expected);
+        when(passwordEncoder.encode(request.getPassword())).thenReturn(expectedPassword);
+        when(roleService.getByName(ROLE_CUSTOMER)).thenReturn(expectedRole);
+        when(customerRepository.save(expected)).thenReturn(savedCustomer);
+
+        //then
+        var actual = modelMapper.map(request, Customer.class);
+        var actualPassword = passwordEncoder.encode(request.getPassword());
+        var actualRole = roleService.getByName(ROLE_CUSTOMER);
+        var actualSavedCustomer = customerRepository.save(expected);
+
+        assertEquals(expected, actual);
+        assertEquals(expectedPassword, actualPassword);
+        assertEquals(expectedRole, actualRole);
+        assertEquals(savedCustomer, actualSavedCustomer);
+
+        verify(modelMapper).map(request, Customer.class);
+        verify(passwordEncoder).encode(request.getPassword());
+        verify(roleService).getByName(ROLE_CUSTOMER);
+        verify(customerRepository).save(expected);
+
     }
 
 }

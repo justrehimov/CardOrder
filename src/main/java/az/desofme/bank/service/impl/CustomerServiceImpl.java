@@ -23,4 +23,14 @@ public class CustomerServiceImpl implements CustomerService {
                 ));
         return customer;
     }
+
+    @Override
+    public Customer getByPin(String pin) throws BankException {
+        var customer = customerRepository.findByPin(pin)
+                .orElseThrow(() -> new BankException(
+                        "Customer not found with this pin:" + pin,
+                        HttpStatus.BAD_REQUEST.toString()
+                ));
+        return customer;
+    }
 }
