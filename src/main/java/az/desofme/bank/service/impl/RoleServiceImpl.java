@@ -17,7 +17,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public Role getByName(String name) throws BankException {
         return roleRepository.findByName(name)
-                .orElseThrow(()->new BankException(
+                .orElseThrow(() -> new BankException(
                         "Role not found with " + name + " name",
                         HttpStatus.NOT_FOUND.toString()
                 ));

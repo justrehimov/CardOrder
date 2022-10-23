@@ -1,10 +1,8 @@
 package az.desofme.bank.service.impl;
 
 import az.desofme.bank.dto.request.CardToCardRequest;
-import az.desofme.bank.dto.response.CreateCustomerResponse;
 import az.desofme.bank.dto.response.ResponseModel;
 import az.desofme.bank.entity.Card;
-import az.desofme.bank.entity.Customer;
 import az.desofme.bank.exceptions.BankException;
 import az.desofme.bank.jwt.JwtService;
 import az.desofme.bank.repository.AccountRepository;
@@ -27,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -42,10 +39,11 @@ public class CardServiceImpl implements CardService {
     private final JavaMailSender javaMailSender;
     private final AccountRepository accountRepository;
     private static final Long THREE_YEARS = (long) (3 * 365 * 24 * 60 * 60);
+
     @Override
     @Transactional
     public ResponseModel<Object> orderCard() {
-        try{
+        try {
             var pin = jwtService.getPinFromRequest(request);
             var customer = customerService.getByPin(pin);
             var account = accountService.createAccount(customer);
@@ -66,7 +64,7 @@ public class CardServiceImpl implements CardService {
                     .code(HttpStatus.OK.name())
                     .build();
 
-        }catch (BankException ex) {
+        } catch (BankException ex) {
             log.error(ex.getMessage(), ex);
             var responseModel = ResponseModel.<Object>builder()
                     .data(null)
@@ -88,10 +86,10 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public ResponseModel<Object> cardToCard(CardToCardRequest cardToCardRequest) {
-        try{
+        try {
 
             var senderAccount = accountService.getById(cardToCardRequest.getAccountId());
-            if(cardToCardRequest.getAmount().compareTo(senderAccount.getBalance()) == 1){
+            if (cardToCardRequest.getAmount().compareTo(senderAccount.getBalance()) == 1) {
                 throw new BankException(
                         "Insufficient balance, balance is:" + senderAccount.getBalance(),
                         HttpStatus.BAD_REQUEST.name()
@@ -108,7 +106,7 @@ public class CardServiceImpl implements CardService {
                     .code(HttpStatus.OK.name())
                     .build();
 
-        }catch (BankException ex) {
+        } catch (BankException ex) {
             log.error(ex.getMessage(), ex);
             var responseModel = ResponseModel.builder()
                     .data(null)
@@ -131,7 +129,7 @@ public class CardServiceImpl implements CardService {
 
     public Card getByCardNumber(String cardNumber) {
         return cardRepository.findByCardNumber(cardNumber)
-                .orElseThrow(()->new BankException(
+                .orElseThrow(() -> new BankException(
                         "Card not found with card number:" + cardNumber,
                         HttpStatus.BAD_REQUEST.name()
                 ));
@@ -152,7 +150,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Async
-    protected void sendCardDetails(Card card) throws Exception{
+    protected void sendCardDetails(Card card) throws Exception {
         String text = "<p>Card holder: " + card.getAccount().getCustomer().getName() + " " + card.getAccount().getCustomer().getSurname() + "</p></br>" +
                 "<p>Card number: " + card.getCardNumber() + "</p></br>" +
                 "<p>Expired Date: " + getExpiredDateAsString(card.getExpiredAt()) + "</p></br>" +

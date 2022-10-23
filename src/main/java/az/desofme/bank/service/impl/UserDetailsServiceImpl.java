@@ -18,7 +18,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String pin) throws UsernameNotFoundException {
         return customerRepository.findByPin(pin)
-                .orElseThrow(()->new BankException(
+                .orElseThrow(() -> new BankException(
                         "User not found with " + pin + " pin",
                         HttpStatus.NOT_FOUND.toString()
                 ));

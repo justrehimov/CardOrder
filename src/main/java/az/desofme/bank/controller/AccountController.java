@@ -30,7 +30,7 @@ public class AccountController {
 
     @PostMapping("/add-balance")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    public void addBalance(@RequestBody BalanceRequest balanceRequest){
+    public void addBalance(@RequestBody BalanceRequest balanceRequest) {
         accountService.addBalance(balanceRequest);
     }
 

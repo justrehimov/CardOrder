@@ -2,8 +2,8 @@ package az.desofme.bank.service.impl;
 
 import az.desofme.bank.dto.request.CustomerRequest;
 import az.desofme.bank.dto.request.LoginRequest;
-import az.desofme.bank.dto.response.LoginResponse;
 import az.desofme.bank.dto.response.CreateCustomerResponse;
+import az.desofme.bank.dto.response.LoginResponse;
 import az.desofme.bank.dto.response.ResponseModel;
 import az.desofme.bank.entity.ConfirmToken;
 import az.desofme.bank.entity.Customer;
@@ -31,13 +31,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 
-import static az.desofme.bank.constants.Roles.*;
+import static az.desofme.bank.constants.Roles.CUSTOMER;
 
 @Service
 @RequiredArgsConstructor
@@ -143,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
                     .code(HttpStatus.OK.toString())
                     .build();
 
-        }catch (BankException ex){
+        } catch (BankException ex) {
             log.error(ex.getMessage(), ex);
             var responseModel = ResponseModel.<LoginResponse>builder()
                     .data(new LoginResponse())
@@ -152,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
                     .message(ex.getMessage())
                     .build();
             return responseModel;
-        }catch (Exception ex){
+        } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             var responseModel = ResponseModel.<LoginResponse>builder()
                     .data(new LoginResponse())

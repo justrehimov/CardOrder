@@ -17,12 +17,12 @@ public class CardController {
     private final CardService cardService;
 
     @PostMapping("/order")
-    public ResponseModel<Object> orderCard(){
+    public ResponseModel<Object> orderCard() {
         return cardService.orderCard();
     }
 
     @PostMapping("/card-to-card")
-    public ResponseModel<Object> cardToCard(@RequestBody CardToCardRequest cardToCardRequest){
+    public ResponseModel<Object> cardToCard(@RequestBody CardToCardRequest cardToCardRequest) {
         return cardService.cardToCard(cardToCardRequest);
     }
 

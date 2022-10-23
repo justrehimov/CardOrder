@@ -40,7 +40,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account getById(Long id) {
         return accountRepository.findById(id)
-                .orElseThrow(()->new BankException(
+                .orElseThrow(() -> new BankException(
                         "Account not found with this id:" + id,
                         HttpStatus.BAD_REQUEST.name()
                 ));

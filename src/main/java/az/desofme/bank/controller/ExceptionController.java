@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ExceptionController {
 
     @ExceptionHandler(Exception.class)
-    public ResponseModel handleException(Exception ex){
+    public ResponseModel handleException(Exception ex) {
         return ResponseModel.builder()
                 .error(true)
                 .message(ex.getMessage())
