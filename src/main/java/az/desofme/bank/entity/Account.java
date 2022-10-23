@@ -18,4 +18,7 @@ public class Account {
     private Customer customer;
     private BigDecimal balance = BigDecimal.valueOf(0);
     private Date createdAt;
+
+    @OneToOne(mappedBy = "account")
+    private Card card;
 }

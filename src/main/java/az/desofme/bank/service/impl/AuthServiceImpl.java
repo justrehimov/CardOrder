@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.List;
 
 import static az.desofme.bank.constants.Roles.*;
@@ -66,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
             customer.setPassword(passwordEncoder.encode(customer.getPassword()));
             Role role = roleService.getByName(CUSTOMER);
             customer.setRoles(List.of(role));
+            customer.setCreatedAt(new Date());
             var savedCustomer = customerRepository.save(customer);
             sendConfirmMail(savedCustomer);
             var createCustomerResponse = new CreateCustomerResponse(savedCustomer.getId());
